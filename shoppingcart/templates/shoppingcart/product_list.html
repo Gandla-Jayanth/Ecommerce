@@ -1,0 +1,85 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="{% static 'css/product.css' %}">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+</head>
+<body>
+    <h1>Shopify</h1>
+    <ul>
+        {% for product in products %}
+        <li>
+            <h2>{{ product.name }}</h2>
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <p>{{ product.description }}</p>
+            <form id="product_form_{{ product.id }}" action="{% url 'shoppingcart:add_to_cart' product_id=product.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1"> <!-- Default quantity is 1 -->
+                <button type="button" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                <button type="button" onclick="buyProduct({{ product.id }}, {{ product.price }})">Buy ₹{{ product.price_inr }}</button>
+                <p>₹{{ product.price_inr }}</p>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <a href="https://wa.me/+919154614501?text=I'm%20interested%20in%20chat" target="_blank" class="whatsapp-chat">
+        <img src="{% static '/images/Whatsapp.png' %}" alt="Whatsapp" width="70px">
+    </a>
+
+    <script>
+        function addToCart(productId) {
+            var form = document.getElementById('product_form_' + productId);
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // Item added successfully, reload the page to update the cart view
+                    window.location.reload();
+                } else {
+                    // Handle error
+                    console.error('Failed to add item to cart');
+                }
+            }).catch(error => {
+                console.error('Error adding item to cart:', error);
+            });
+        }
+    </script>
+    <script>
+        function buyProduct(productId, productPrice) {
+            var quantity = parseInt(document.getElementById('product_form_' + productId).elements.namedItem('quantity').value);
+            var totalAmount = quantity * productPrice;
+
+            // Redirect to UPI payment URL
+            var upiPaymentUrl = 'upi://pay?pa=yourupi@example.com&pn=YourName&am=' + totalAmount + '&cu=INR&tn=Payment for Product';
+            window.location.href = upiPaymentUrl;
+        }
+    </script>
+
+    <!--Start of Tawk.to Script-->
+        <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/65ffbe89a0c6737bd1240fad/1hpng0j0n';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+        })();
+        </script>
+    <!--End of Tawk.to Script-->
+</body>
+</html>
